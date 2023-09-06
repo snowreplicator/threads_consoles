@@ -1,0 +1,67 @@
+apply plugin: 'java'
+compileJava {
+    options.encoding = "UTF-8"
+}
+
+// зависимости нужны во время исполнения
+dependencies {
+    compileOnly group: 'org.beryx', name: 'text-io', version: '3.4.1'
+    runtimeOnly group: 'org.beryx', name: 'text-io', version: '3.4.1'
+
+    compileOnly group: 'com.google.code.gson', name: 'gson', version: '2.10.1'
+    runtimeOnly group: 'com.google.code.gson', name: 'gson', version: '2.10.1'
+}
+
+
+// группа и версия для pom
+group = "ru.zorro"
+version = "1.0.1"
+
+// имя выходного jar
+configurations {
+    // jar.baseName - артефакт для pom (если не задано - то такое как папка проекта)
+    jar.archiveName = 'consoles' + '.jar'
+}
+
+
+repositories {
+    mavenCentral()
+}
+
+
+// запуск проекта (gradle run)
+apply plugin: 'application'
+mainClassName = 'ru.zorro.Main'
+
+
+// информация в манифест
+jar {
+    manifest {
+        attributes(
+                "copywrites": "zorro",
+                "artefact": jar.archiveName,
+                "project-group":     project.group,
+                "project-name":      project.name,
+                "project-version":   project.version,
+                "version": archiveVersion)
+    }
+}
+
+
+// pom.xml в собранный jar
+jar {
+    into("META-INF/maven/$project.group/$project.name") {
+        from { generatePomFileForMavenJavaPublication }
+        rename ".*", "pom.xml"
+    }
+}
+
+// публикатор в maven нужен для создания pom.xml
+apply plugin: 'maven-publish'
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+}
